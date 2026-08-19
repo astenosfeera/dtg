@@ -1,0 +1,10 @@
+# Neļaut saglabāt nekādas node_modules mapes
+node_modules/
+**/node_modules/
+
+# Neļaut saglabāt paroles un konfidenciālos failus
+.env
+**/.env
+
+# Citi nevajadzīgi faili
+.DS_Store
