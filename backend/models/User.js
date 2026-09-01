@@ -19,7 +19,8 @@ const userSchema = new mongoose.Schema({ //defining structure
     createdAt: {
         type: Date,
         default: Date.now
-    }
+    },
+    accessToken: { type: String } //lai mongoose ļautu saglabāt 
 });
 
 module.exports = mongoose.model('User', userSchema); //makes DB's model 'User'

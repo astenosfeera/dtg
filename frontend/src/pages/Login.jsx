@@ -1,8 +1,14 @@
 import { useState } from 'react'; //allows to create state variables (email, password, message)
+import { useNavigate } from 'react-router-dom'; //priekš useNavigate
 import '../App.css'; //imports CSS stying
+import useAuth from '../hooks/useAuth';
+import axios from '../api/axios';
 
 //Components like Login, Navbar should start with a capital letter.
 function Login() {
+  const { setAuth } = useAuth();
+  const navigate = useNavigate(); //priekš protected routes, augšā
+
   //In order for React to see the variables there are methods like setEmail etc. 
   //useState inserts a value in variable, .. (need to learn more in future)
   const [email, setEmail] = useState('');
@@ -23,43 +29,38 @@ function Login() {
 
     //If there is a mistake in try, it stops and goes to catch block. It was made because at first had problems connecting to DB.
     try {
-      console.log("2. FRONTEND: Make fetch request to http://localhost:5000/api/auth/login");
+      //using axios
+      const response = await axios.post('/api/auth/login',
+        { email, password },
+        {
+          headers: { 'Content-Type': 'application/json'},
+          withCredentials: true //ļauj pārlūkam saglabāt res.cookie no backend
+        }
+      );
+
+      console.log("2. FRONTEND: Received response from backend:", response.data);
+
+      const accessToken = response?.data?.accessToken;
+
+      //Saglabā lietotāju un tā tokenu React globālajā AuthContext atmiņā
+      setAuth({ email, accessToken });
+
+      setIsError(false);
+      setMessage(response.data?.msg || 'LOGIN SUCCESSFUL!');
       
-      //fetch is an inbuilt browser function that sends the request via network to another page (backend address):
-      //await nodrošina, ka backend serveris saņem ziņu, apstrādā to un atsūta atbildi
-      //answer is stored in var response
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST', //message type is POST usually for checking passwords etc.
-        headers: { 'Content-Type': 'application/json',}, 
-        body: JSON.stringify({ email, password }), 
-      });
-//^shorter - > fetch snet data and waited for response.
+      navigate('/profile'); //novirza lietotāju uz profilu
 
-//After fetch ends work, server sends back response object. It contains HTTP status:
-//200 -> All good
-//400/401 -> User's mistake - uncorrect password or e-mail
-//500 -> Server mistake - error in backend or DB is not working
-      console.log("3. FRONTEND: Received status code from backend:", response.status);
-
-//response that we receive from the server in the beginning is not processed, response.json() opens this package and converts JSON text to JS object (like "login-successful")
-//await - also the opening of this package takes times so we ask to await till the data will be opened
-//result is stored in variable data
-      const data = await response.json(); 
-      console.log("4. FRONTEND: Received response from backend:", data);
-
-      if (response.ok) {
-        setIsError(false);
-        setMessage(data.msg); //put in message "box" the text backend server sent
-        alert('LOGIN SUCCESSFUL!'); 
-      } else {
-        setIsError(true);
-        setMessage(data.msg);
-        alert('KĻŪDA: ' + data.msg);
-      } 
-    } catch (err) {
-      console.error("FRONTEND ERROR DURING FETCH:", err);
+      } catch (err) {
+      console.error("FRONTEND ERROR DURING LOGIN:", err);
       setIsError(true);
-      setMessage('Could not connect to the server');
+      
+      if (!err?.response) {
+        setMessage('Serveris nav sasniedzams');
+      } else if (err.response?.status === 400 || err.response?.status === 401) {
+        setMessage(err.response.data?.msg || 'Nepareizs e-pasts vai parole');
+      } else {
+        setMessage('Autorizācija neizdevās');
+      }
     }
   };
 

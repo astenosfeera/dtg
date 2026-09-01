@@ -1,25 +1,21 @@
-/*const express = require('express');
-const app = express();
-const port = 3000;
-
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
-});*/
 const cors = require('cors'); //added after installing npm install cors in terminal
 const express = require('express');
 const mongoose = require('mongoose'); 
+const cookieParser = require('cookie-parser'); //priekš JWT tokeniem
 require('dotenv').config(); 
 
 const app = express();
 const port = 5000; 
 
-app.use(cors()); //Added after installing npm install cors in terminal, needs to be before next line
+app.use(cors({
+  origin: true, //atļauj pieprasījumus no jebkura lokālā porta
+  credentials: true //atļauj sūtīt un saņemt cookies
+})); 
+
 app.use(express.json());
-app.use('/api/auth', require('./routes/auth')); //added after crating routes/auth.js
+app.use(cookieParser()); //nepieciešams priekš req.cookies
+
+app.use('/api/auth', require('./routes/auth')) //added after creating routes/auth.js
 
 const mongoURI = process.env.MONGO_URI;
 
