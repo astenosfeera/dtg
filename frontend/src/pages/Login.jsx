@@ -1,7 +1,8 @@
+//4.Konkrētā lapa ar formu, ievades laukiem un pogu
 import { useState } from 'react'; //allows to create state variables (email, password, message)
 import { useNavigate } from 'react-router-dom'; //priekš useNavigate
 import '../App.css'; //imports CSS stying
-import useAuth from '../hooks/useAuth';
+import useAuth from '../hooks/useAuth'; 
 import axios from '../api/axios';
 
 //Components like Login, Navbar should start with a capital letter.
@@ -29,24 +30,27 @@ function Login() {
 
     //If there is a mistake in try, it stops and goes to catch block. It was made because at first had problems connecting to DB.
     try {
-      //using axios
-      const response = await axios.post('/api/auth/login',
-        { email, password },
+      //axios.post() vienmēr pieņem trīs parametrus šādā secībā:
+      //axios.post( ADRESE , DATI , KONFIGURĀCIJA )
+      //nosūta serverim pieprasījumu ar e-pastu un paroli
+      const response = await axios.post('/api/auth/login', //1.adrese, kur sūtīt
+        { email, password }, //2.dati ko sūtīt
         {
           headers: { 'Content-Type': 'application/json'},
-          withCredentials: true //ļauj pārlūkam saglabāt res.cookie no backend
-        }
+          withCredentials: true //ļauj pārlūkam saglabāt cookies no backend
+        } //3.konfigurācija kā sūtīt
       );
 
       console.log("2. FRONTEND: Received response from backend:", response.data);
 
+      //izvelk no servera atbildes jauno piekļuves tokenu
       const accessToken = response?.data?.accessToken;
 
       //Saglabā lietotāju un tā tokenu React globālajā AuthContext atmiņā
       setAuth({ email, accessToken });
 
-      setIsError(false);
-      setMessage(response.data?.msg || 'LOGIN SUCCESSFUL!');
+      setIsError(false); //noņem iepriekšējās kļūdas sarkano krāsu, ja pirmoreiz ievada kļūdaini
+      setMessage(response.data?.msg || 'LOGIN SUCCESSFUL!'); //nolasa backend atsūtīto tekstu
       
       navigate('/profile'); //novirza lietotāju uz profilu
 
